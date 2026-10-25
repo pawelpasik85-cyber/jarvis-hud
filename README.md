@@ -1,6 +1,6 @@
 # J.A.R.V.I.S. HUD
 
-Interfejs w stylu Iron Mana: animowany reaktor, panele, sterowanie głosem po polsku.
+Asystent głosowy w stylu Jarvisa z Iron Mana: spokojny, przyrządowy interfejs z reaktorem, który reaguje na Twój głos, i sterowaniem po polsku.
 „Mózgiem” jest **Cindy** uruchomiona na tym samym komputerze, czyli Claude Code / Codex
 na Twoich subskrypcjach. HUD nie ma własnego klucza API i nic dodatkowo nie kosztuje.
 

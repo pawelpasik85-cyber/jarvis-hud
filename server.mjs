@@ -322,7 +322,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && url.pathname === '/api/demo') {
       if (state.cindy) { await state.cindy.revoke(); state.cindy = null; }
-      Object.assign(state, { mode: 'demo', message: 'Tryb demo — odpowiedzi bez modelu AI.', models: [], modelId: null, sessionOpen: false });
+      Object.assign(state, { mode: 'demo', message: 'Tryb demo: odpowiedzi są przykładowe, bez modelu AI.', models: [], modelId: null, sessionOpen: false });
       return sendJson(res, 200, publicStatus());
     }
     if (req.method === 'POST' && url.pathname === '/api/model') {
