@@ -6,29 +6,28 @@
 <title>Jarvis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500&family=Barlow+Semi+Condensed:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500&family=Barlow+Semi+Condensed:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --night: #0a1220;
-    --night-2: #0e1829;
-    --ice: #e8f1f7;
-    --steel: #7d8ea0;
-    --hair: rgba(232, 241, 247, .12);
-    --hair-strong: rgba(232, 241, 247, .24);
-    --arc: #9fe7ff;
-    --amber: #f2b35b;
+    --night: #050b16;
+    --night-2: #0b1628;
+    --ice: #e8f6ff;
+    --steel: #7f93a8;
+    --hair: rgba(170, 225, 255, .14);
+    --hair-strong: rgba(170, 225, 255, .3);
+    --arc: #8fe3ff;
+    --amber: #f6b552;
     --fault: #ff7a7a;
-    --accent: var(--arc); /* zmienia się ze stanem */
+    --accent: var(--arc);
+    --cond: "Barlow Semi Condensed", Barlow, "Segoe UI", sans-serif;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body {
-    background: radial-gradient(120% 90% at 30% 50%, var(--night-2), var(--night) 65%);
+    background: radial-gradient(90% 80% at 32% 48%, #0d2036 0%, var(--night) 62%);
     color: var(--ice);
     font-family: Barlow, "Segoe UI", system-ui, sans-serif;
-    font-weight: 400;
-    font-size: 18px;
-    line-height: 1.4;
+    font-size: 18px; line-height: 1.4;
     overflow: hidden;
     -webkit-tap-highlight-color: transparent;
   }
@@ -37,81 +36,89 @@
   button, input, select { font: inherit; color: inherit; }
   :focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
 
+  #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
   .app {
-    height: 100%;
+    position: relative; height: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr) auto;
-    column-gap: clamp(24px, 5vw, 80px);
-    padding: clamp(16px, 3vh, 32px) clamp(20px, 4vw, 56px);
+    column-gap: clamp(24px, 4vw, 64px);
+    padding: clamp(14px, 2.6vh, 28px) clamp(20px, 3.4vw, 52px);
   }
 
   /* ---------- góra ---------- */
-  .top { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-  .clock { font-family: "Barlow Semi Condensed", Barlow, sans-serif; font-weight: 300; font-size: clamp(34px, 6vh, 52px); letter-spacing: -.01em; font-variant-numeric: tabular-nums; line-height: 1; }
-  .date { color: var(--steel); font-size: 15px; margin-left: 14px; }
-  .link { display: flex; align-items: center; gap: 14px; color: var(--steel); font-size: 15px; }
-  .link .lamp { width: 7px; height: 7px; border-radius: 50%; background: var(--steel); }
-  .link.ok .lamp { background: #6fe0a6; }
-  .link.wait .lamp { background: var(--amber); }
-  .link.off .lamp { background: var(--fault); }
+  .top { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px; min-height: 44px; }
+  .top-info { display: none; margin-right: auto; align-items: baseline; gap: 14px; color: var(--steel); font-size: 15px; }
+  .tclock { font-family: var(--cond); font-weight: 300; font-size: 34px; color: var(--ice); line-height: 1; font-variant-numeric: tabular-nums; }
+  .tlink::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--arc); margin-right: 8px; vertical-align: middle; }
   .icon-btn {
     width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%;
-    background: none; border: 1px solid var(--hair); cursor: pointer; color: var(--steel);
+    background: rgba(5, 11, 22, .4); border: 1px solid var(--hair); cursor: pointer; color: var(--steel);
     transition: border-color .2s, color .2s;
   }
   .icon-btn:hover { border-color: var(--hair-strong); color: var(--ice); }
   .icon-btn svg { width: 20px; height: 20px; }
 
-  /* ---------- reaktor ---------- */
-  .stage { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
-  .reactor {
-    position: relative; width: min(100%, 58vh, 520px); aspect-ratio: 1;
-    border: none; background: none; padding: 0; cursor: pointer; border-radius: 50%;
+  /* ---------- rdzeń i panele wokół ---------- */
+  .stage { position: relative; min-height: 0; }
+  .core-hit {
+    position: absolute; border-radius: 50%; border: none; background: none; cursor: pointer; padding: 0;
   }
-  .reactor svg, .reactor canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .reactor .ticks line { stroke: var(--ice); }
-  .reactor .orbit { transform-origin: 200px 200px; transition: opacity .4s; opacity: 0; }
-  body.thinking .reactor .orbit { opacity: 1; animation: orbit 1.6s cubic-bezier(.45, 0, .55, 1) infinite; }
-  @keyframes orbit { to { transform: rotate(360deg); } }
-  .status { margin-top: 18px; font-size: 17px; color: var(--steel); min-height: 1.4em; transition: color .3s; }
+  .status {
+    position: absolute; left: 0; right: 0; text-align: center;
+    font-family: var(--cond); font-size: 17px; letter-spacing: .04em; color: var(--steel);
+    transition: color .3s;
+  }
   body.listening .status, body.error .status { color: var(--accent); }
+
+  .callout {
+    position: absolute; min-width: 150px; padding: 8px 12px 9px 12px;
+    background: linear-gradient(90deg, rgba(143, 227, 255, .07), rgba(143, 227, 255, .015));
+    border-left: 1px solid var(--hair-strong);
+  }
+  .callout::before, .callout::after { /* narożniki */
+    content: ""; position: absolute; left: -1px; width: 10px; height: 1px; background: var(--arc); opacity: .8;
+  }
+  .callout::before { top: 0; } .callout::after { bottom: 0; }
+  .callout .k { font-size: 13px; color: var(--steel); }
+  .callout .v { font-family: var(--cond); font-weight: 400; font-size: 20px; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .callout .v.big { font-weight: 300; font-size: clamp(34px, 6vh, 50px); line-height: 1; }
+  .callout .s { font-size: 13px; color: var(--steel); margin-top: 2px; white-space: nowrap; }
+  .meter { display: flex; gap: 3px; margin-top: 6px; height: 14px; align-items: flex-end; }
+  .meter i { width: 4px; background: var(--accent); opacity: .25; height: 30%; transition: height .08s, opacity .08s; }
 
   /* ---------- rozmowa ---------- */
   .talk {
-    min-height: 0; display: flex; flex-direction: column; justify-content: flex-end;
-    overflow: hidden;
-    mask-image: linear-gradient(to bottom, transparent 0, #000 22%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22%);
+    min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 24%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 24%);
   }
-  .log { overflow-y: auto; scrollbar-width: none; padding: 40px 0 8px; max-width: 34em; }
+  .log { overflow-y: auto; scrollbar-width: none; padding: 40px 0 8px; max-width: 32em; }
   .log::-webkit-scrollbar { display: none; }
   .turn { margin: 0 0 30px; }
   .turn.me { color: var(--steel); font-size: 17px; margin-bottom: 6px; }
-  .turn.ai { font-size: clamp(20px, 3.1vh, 26px); font-weight: 300; line-height: 1.32; white-space: pre-wrap; }
+  .turn.ai { font-size: clamp(20px, 3vh, 25px); font-weight: 300; line-height: 1.32; white-space: pre-wrap; text-shadow: 0 0 18px rgba(143, 227, 255, .25); }
   .turn.fault { color: var(--fault); font-size: 16px; }
   .turn .tool { display: block; color: var(--steel); font-size: 15px; margin-top: 6px; }
   .live { color: var(--amber); font-size: 19px; min-height: 1.5em; }
   .empty { color: var(--steel); font-size: 17px; max-width: 26em; }
 
   /* ---------- dół ---------- */
-  .bar { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; padding-top: 14px; border-top: 1px solid var(--hair); }
-  .bar input {
-    flex: 1; min-width: 0; height: 48px; padding: 0 4px; font-size: 18px;
-    background: none; border: none; outline: none;
-  }
+  .bar { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; padding-top: 12px; border-top: 1px solid var(--hair); }
+  .bar input { flex: 1; min-width: 0; height: 48px; padding: 0 4px; font-size: 18px; background: none; border: none; outline: none; }
   .bar input::placeholder { color: var(--steel); }
   .text-btn {
     height: 44px; padding: 0 18px; border-radius: 22px; cursor: pointer;
-    background: none; border: 1px solid var(--hair); color: var(--ice);
+    background: rgba(5, 11, 22, .45); border: 1px solid var(--hair); color: var(--ice);
     transition: border-color .2s, background .2s;
   }
-  .text-btn:hover { border-color: var(--hair-strong); background: rgba(232, 241, 247, .04); }
+  .text-btn:hover { border-color: var(--hair-strong); background: rgba(143, 227, 255, .06); }
   .mic { border-color: var(--hair-strong); }
   body.listening .mic { border-color: var(--amber); color: var(--amber); }
 
   /* ---------- ustawienia ---------- */
-  .scrim { position: fixed; inset: 0; background: rgba(5, 9, 16, .55); opacity: 0; pointer-events: none; transition: opacity .25s; }
+  .scrim { position: fixed; inset: 0; background: rgba(3, 7, 14, .6); opacity: 0; pointer-events: none; transition: opacity .25s; }
   .sheet {
     position: fixed; top: 0; right: 0; bottom: 0; width: min(380px, 100%);
     background: var(--night-2); border-left: 1px solid var(--hair);
@@ -124,60 +131,64 @@
   .group { padding: 18px 0; border-top: 1px solid var(--hair); }
   .group p { margin: 0 0 12px; color: var(--steel); font-size: 15px; }
   .row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 16px; }
-  .row span:last-child { color: var(--steel); text-align: right; }
+  .row span:last-child { color: var(--steel); text-align: right; overflow-wrap: anywhere; }
   .sheet label { display: block; font-size: 15px; color: var(--steel); margin: 4px 0 6px; }
-  .sheet select {
-    width: 100%; height: 44px; padding: 0 10px; margin-bottom: 14px; font-size: 16px;
-    background: var(--night); border: 1px solid var(--hair-strong); border-radius: 8px;
-  }
+  .sheet select { width: 100%; height: 44px; padding: 0 10px; margin-bottom: 14px; font-size: 16px; background: var(--night); border: 1px solid var(--hair-strong); border-radius: 8px; }
   .switch { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 0; background: none; border: none; cursor: pointer; font-size: 16px; text-align: left; }
   .switch i { width: 40px; height: 22px; border-radius: 11px; border: 1px solid var(--hair-strong); position: relative; flex: none; transition: background .2s, border-color .2s; }
   .switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--steel); transition: transform .2s, background .2s; }
-  .switch[aria-checked="true"] i { background: rgba(159, 231, 255, .18); border-color: var(--arc); }
+  .switch[aria-checked="true"] i { background: rgba(143, 227, 255, .18); border-color: var(--arc); }
   .switch[aria-checked="true"] i::after { transform: translateX(18px); background: var(--arc); }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-  /* ---------- ekran radia i wąskie ekrany ---------- */
+  /* ---------- radio i wąskie ekrany ---------- */
   @media (max-height: 640px) {
-    body { font-size: 17px; }
-    .bar { padding-top: 10px; }
-    .log { padding-top: 24px; }
+    .bar { padding-top: 8px; }
+    .log { padding-top: 20px; }
+  }
+  @media (max-width: 1150px), (max-height: 640px) {
+    .callout { display: none; }
+    .top-info { display: flex; }
   }
   @media (max-width: 720px) {
     body { overflow: auto; }
-    .app { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(200px, 1fr) auto; height: auto; min-height: 100%; row-gap: 12px; }
-    .reactor { width: min(78vw, 340px); }
-    .date { display: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    body.thinking .reactor .orbit { animation-duration: 6s; }
-    .sheet, .scrim { transition: none; }
+    .app { grid-template-columns: 1fr; grid-template-rows: auto minmax(320px, 52vh) minmax(160px, 1fr) auto; height: auto; min-height: 100%; row-gap: 10px; }
+    #date2 { display: none; }
   }
 </style>
 </head>
 <body>
+<canvas id="scene" aria-hidden="true"></canvas>
+
 <div class="app">
   <header class="top">
-    <div><span class="clock" id="clock">--:--</span><span class="date" id="date"></span></div>
-    <div class="link off" id="link">
-      <span class="lamp" aria-hidden="true"></span><span id="link-text">Brak połączenia z Cindy</span>
-      <button class="icon-btn" id="btn-settings" aria-label="Ustawienia">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
-      </button>
-    </div>
+    <div class="top-info"><span class="tclock" id="clock2">--:--</span><span id="date2"></span><span class="tlink" id="link2"></span></div>
+    <button class="icon-btn" id="btn-settings" aria-label="Ustawienia">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
   </header>
 
-  <section class="stage">
-    <button class="reactor" id="reactor" aria-label="Mów do Jarvisa">
-      <svg viewBox="0 0 400 400" aria-hidden="true" fill="none">
-        <circle cx="200" cy="200" r="196" stroke="#e8f1f7" stroke-opacity=".10"/>
-        <g class="ticks" id="ticks"></g>
-        <circle cx="200" cy="200" r="150" stroke="#e8f1f7" stroke-opacity=".16"/>
-        <circle cx="200" cy="200" r="70" stroke="#e8f1f7" stroke-opacity=".08"/>
-        <g class="orbit"><circle cx="200" cy="200" r="168" stroke="#9fe7ff" stroke-width="1.5" stroke-dasharray="70 986" stroke-linecap="round"/></g>
-      </svg>
-      <canvas id="wave" aria-hidden="true"></canvas>
-    </button>
+  <section class="stage" id="stage">
+    <div class="callout time" id="co-time" data-anchor="225">
+      <div class="v big" id="clock">--:--</div>
+      <div class="s" id="date"></div>
+    </div>
+    <div class="callout" id="co-core" data-anchor="135">
+      <div class="k">Rdzeń</div>
+      <div class="v" id="link-text">Brak połączenia</div>
+      <div class="s" id="link-sub">Cindy</div>
+    </div>
+    <div class="callout optional" id="co-session" data-anchor="315">
+      <div class="k">Sesja</div>
+      <div class="v" id="sess-count">0 poleceń</div>
+      <div class="s" id="sess-time">Ostatnia odpowiedź: —</div>
+    </div>
+    <div class="callout optional" id="co-audio" data-anchor="45">
+      <div class="k">Głos</div>
+      <div class="v" id="audio-state">Mikrofon gotowy</div>
+      <div class="meter" id="meter" aria-hidden="true"></div>
+    </div>
+    <button class="core-hit" id="reactor" aria-label="Mów do Jarvisa"></button>
     <div class="status" id="status" aria-live="polite">Gotowy</div>
   </section>
 
@@ -196,7 +207,6 @@
 <div class="scrim" id="scrim"></div>
 <aside class="sheet" id="sheet" aria-label="Ustawienia" aria-hidden="true">
   <h2>Ustawienia <button class="icon-btn" id="btn-close" aria-label="Zamknij"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h2>
-
   <div class="group">
     <p id="conn-msg">Łączenie…</p>
     <div class="actions">
@@ -204,7 +214,6 @@
       <button class="text-btn" id="btn-demo">Tryb demo</button>
     </div>
   </div>
-
   <div class="group">
     <label for="sel-model">Model</label>
     <select id="sel-model" disabled><option>Brak modeli</option></select>
@@ -212,8 +221,8 @@
     <select id="sel-voice"></select>
     <button class="switch" id="sw-wake" role="switch" aria-checked="false">Reaguj na słowo „Jarvis”<i></i></button>
     <button class="switch" id="sw-speak" role="switch" aria-checked="true">Czytaj odpowiedzi na głos<i></i></button>
+    <button class="switch" id="sw-fx" role="switch" aria-checked="true">Pełne efekty (wyłącz na słabym sprzęcie)<i></i></button>
   </div>
-
   <div class="group">
     <div class="row"><span>Rozpoznawanie mowy</span><span id="st-mic">—</span></div>
     <div class="row"><span>Głos lektora</span><span id="st-tts">—</span></div>
@@ -231,86 +240,255 @@
     set(k, v) { try { localStorage.setItem('jarvis.' + k, JSON.stringify(v)); } catch { /* brak pamięci przeglądarki */ } },
   };
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function setSwitch(id, on) { $(id).setAttribute('aria-checked', String(on)); }
 
-  // ---------- skala reaktora: 120 kresek, co dziesiąta dłuższa ----------
-  const ticks = $('ticks');
-  for (let i = 0; i < 120; i++) {
-    const a = (i / 120) * Math.PI * 2 - Math.PI / 2, long = i % 10 === 0;
-    const r1 = 182, r2 = long ? 170 : 177;
-    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    l.setAttribute('x1', 200 + Math.cos(a) * r1); l.setAttribute('y1', 200 + Math.sin(a) * r1);
-    l.setAttribute('x2', 200 + Math.cos(a) * r2); l.setAttribute('y2', 200 + Math.sin(a) * r2);
-    l.setAttribute('stroke-opacity', long ? '.45' : '.18');
-    ticks.appendChild(l);
-  }
-
-  // ---------- zegar ----------
-  function tick() {
-    const n = new Date();
-    $('clock').textContent = n.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
-    $('date').textContent = n.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
-  }
-  tick(); setInterval(tick, 10_000);
-
-  // ---------- stany ----------
+  // ================= STAN =================
   let uiState = 'idle';
-  const LABELS = { idle: 'Gotowy', listening: 'Słucham…', thinking: 'Myślę…', speaking: 'Mówię', error: 'Coś poszło nie tak', wake: 'Powiedz „Jarvis”' };
+  const LABELS = { idle: 'Gotowy', listening: 'Słucham…', thinking: 'Analizuję…', speaking: 'Mówię', error: 'Coś poszło nie tak', wake: 'Powiedz „Jarvis”' };
   function setState(s) {
     uiState = s;
     document.body.classList.remove('listening', 'thinking', 'speaking', 'error');
     if (s !== 'idle' && s !== 'wake') document.body.classList.add(s);
     $('status').textContent = LABELS[s] || s;
+    $('audio-state').textContent = s === 'listening' ? 'Słucham' : s === 'speaking' ? 'Mówię' : (SR ? 'Mikrofon gotowy' : 'Brak mikrofonu');
   }
 
-  // ---------- fala w środku reaktora ----------
-  const canvas = $('wave'), ctx = canvas.getContext('2d');
-  let level = 0, target = 0, freq = null, t0 = performance.now();
-  const N = 160, phase = Array.from({ length: 6 }, () => Math.random() * Math.PI * 2);
-  function resize() {
-    const r = canvas.getBoundingClientRect(), d = devicePixelRatio || 1;
-    canvas.width = Math.round(r.width * d); canvas.height = Math.round(r.height * d);
+  // ================= SCENA (canvas 2D z poświatą) =================
+  const cv = $('scene'), ctx = cv.getContext('2d');
+  const glowCv = document.createElement('canvas'), gctx = glowCv.getContext('2d');
+  const layer = document.createElement('canvas'), lctx = layer.getContext('2d');
+  let W = 0, H = 0, DPR = 1, core = { x: 0, y: 0, r: 100 };
+  let fx = store.get('fx', true);
+  let level = 0, target = 0, freq = null;
+  let mouse = { x: 0, y: 0 }, par = { x: 0, y: 0 };
+  let flash = 0; // błysk przy aktywacji
+  const t0 = performance.now();
+
+  const COLORS = { idle: [143, 227, 255], listening: [246, 181, 82], error: [255, 122, 122] };
+  let col = [...COLORS.idle];
+  const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+
+  // cząsteczki w głębi
+  const dust = Array.from({ length: 140 }, () => ({
+    a: Math.random() * Math.PI * 2, d: .35 + Math.random() * 1.6, z: Math.random(),
+    s: (Math.random() - .5) * .02, y: (Math.random() - .5) * .5,
+  }));
+  // segmenty łuków (stałe, „projektowe”)
+  const arcSegs = [[0, .9], [1.05, 1.5], [1.62, 1.7], [2.2, 3.6], [3.75, 3.8], [4.1, 5.2], [5.4, 6.0]];
+  const dashSegs = Array.from({ length: 48 }, (_, i) => i).filter(i => i % 7 !== 3);
+  const phase = Array.from({ length: 6 }, () => Math.random() * Math.PI * 2);
+
+  function layout() {
+    DPR = Math.min(devicePixelRatio || 1, fx ? 2 : 1.25);
+    W = innerWidth; H = innerHeight;
+    for (const c of [cv, layer]) { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); }
+    glowCv.width = Math.round(W / 4); glowCv.height = Math.round(H / 4);
+    // rdzeń w środku obszaru .stage
+    const r = $('stage').getBoundingClientRect();
+    const radius = Math.max(90, Math.min(r.width * .29, r.height * .36));
+    core = { x: r.left + r.width / 2, y: r.top + r.height / 2 - 10, r: radius };
+    const hit = $('reactor');
+    hit.style.left = (core.x - r.left - radius * .62) + 'px';
+    hit.style.top = (core.y - r.top - radius * .62) + 'px';
+    hit.style.width = hit.style.height = (radius * 1.24) + 'px';
+    $('status').style.top = (core.y - r.top + radius * 1.12) + 'px';
+    placeCallouts(r);
   }
-  new ResizeObserver(resize).observe(canvas); resize();
-  function accentColor() { return getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#9fe7ff'; }
-  function draw(now) {
-    const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2, R = w * .31;
-    const t = (now - t0) / 1000;
-    level += (target - level) * .18;
-    ctx.clearRect(0, 0, w, h);
-    const color = accentColor();
-    // dwie fale: wyraźna i cień za nią
-    for (const [alpha, scale, lw] of [[.25, 1.35, 1], [.95, 1, 1.6]]) {
-      ctx.beginPath();
+  // panele rozkładamy wokół rdzenia, pod kątem z data-anchor (stopnie, 0 = prawo, w dół rośnie)
+  const leaders = [];
+  function placeCallouts(stageRect) {
+    leaders.length = 0;
+    for (const el of document.querySelectorAll('.callout')) {
+      if (getComputedStyle(el).display === 'none') continue;
+      const deg = Number(el.dataset.anchor), a = deg * Math.PI / 180;
+      const right = Math.cos(a) > 0, down = Math.sin(a) > 0;
+      const reach = core.r * 1.22;
+      const ex = core.x + Math.cos(a) * reach, ey = core.y + Math.sin(a) * reach;
+      const elbowX = ex + (right ? 1 : -1) * core.r * .3;
+      const w = el.offsetWidth, h = el.offsetHeight;
+      let left = right ? elbowX + 10 : elbowX - 10 - w;
+      let top = ey - h / 2;
+      left = Math.max(stageRect.left + 4, Math.min(left, stageRect.right - w - 4));
+      top = Math.max(stageRect.top, Math.min(top, stageRect.bottom - h));
+      el.style.left = (left - stageRect.left) + 'px';
+      el.style.top = (top - stageRect.top) + 'px';
+      const ax = core.x + Math.cos(a) * core.r * 1.02, ay = core.y + Math.sin(a) * core.r * 1.02;
+      leaders.push({ ax, ay, ex, ey, bx: right ? left : left + w, by: top + h / 2, down });
+    }
+  }
+  addEventListener('resize', layout);
+  addEventListener('pointermove', e => { mouse.x = e.clientX / W - .5; mouse.y = e.clientY / H - .5; });
+
+  function ring(c, x, y, r, a0, a1, lw, alpha) {
+    c.beginPath(); c.arc(x, y, r, a0, a1); c.lineWidth = lw; c.strokeStyle = rgba(col, alpha); c.stroke();
+  }
+  // pierścień w „3D”: elipsa przechylona o tilt wokół osi obróconej o rot
+  function tiltedRing(c, x, y, r, rot, tilt, lw, alpha, segs) {
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(1, Math.cos(tilt));
+    c.lineWidth = lw / Math.max(.25, Math.cos(tilt)); c.strokeStyle = rgba(col, alpha);
+    if (segs) for (const [s, e] of segs) { c.beginPath(); c.arc(0, 0, r, s, e); c.stroke(); }
+    else { c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2); c.stroke(); }
+    c.restore();
+  }
+
+  function drawScene(c, t) {
+    const R = core.r, k = DPR;
+    c.setTransform(k, 0, 0, k, 0, 0);
+    c.clearRect(0, 0, W, H);
+    const x = core.x + par.x * 14, y = core.y + par.y * 10;
+    const spin = reduceMotion ? .15 : 1;
+    const think = uiState === 'thinking' ? 1 : 0;
+    c.lineCap = 'round';
+
+    // cząsteczki (głębia + paralaksa)
+    for (const p of dust) {
+      p.a += p.s * .02 * spin;
+      const px = x + Math.cos(p.a) * R * p.d * 1.6 - par.x * 40 * p.z;
+      const py = y + Math.sin(p.a) * R * p.d * .55 + p.y * R - par.y * 30 * p.z;
+      c.fillStyle = rgba(col, .08 + p.z * .35);
+      c.fillRect(px, py, 1 + p.z * 1.4, 1 + p.z * 1.4);
+    }
+
+    // zewnętrzna skala z kreskami i odczytami
+    ring(c, x, y, R * 1.02, 0, Math.PI * 2, 1, .22);
+    c.save(); c.translate(x, y); c.rotate(t * .01 * spin);
+    for (let i = 0; i < 180; i++) {
+      const a = i / 180 * Math.PI * 2, long = i % 15 === 0, mid = i % 5 === 0;
+      const r1 = R * .985, r2 = R * (long ? .93 : mid ? .955 : .97);
+      c.beginPath(); c.moveTo(Math.cos(a) * r1, Math.sin(a) * r1); c.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+      c.lineWidth = long ? 1.4 : 1; c.strokeStyle = rgba(col, long ? .6 : mid ? .32 : .16); c.stroke();
+      if (long && R > 120) {
+        c.save(); c.rotate(a + Math.PI / 2);
+        c.fillStyle = rgba(col, .45); c.font = `${Math.max(9, R * .042)}px "Barlow Semi Condensed", sans-serif`; c.textAlign = 'center';
+        c.fillText(String(i * 2).padStart(3, '0'), 0, -R * .885);
+        c.restore();
+      }
+    }
+    c.restore();
+
+    // segmentowany łuk
+    c.save(); c.translate(x, y); c.rotate(-t * .05 * spin);
+    for (const [s, e] of arcSegs) ring(c, 0, 0, R * .86, s, e, 2, .7);
+    c.restore();
+
+    // gruby przerywany pierścień
+    c.save(); c.translate(x, y); c.rotate(t * .09 * spin * (1 + think * 4));
+    for (const i of dashSegs) { const a = i / 48 * Math.PI * 2; ring(c, 0, 0, R * .76, a, a + Math.PI * 2 / 48 * .62, R * .035, .28 + think * .2); }
+    c.restore();
+
+    // żyroskop: przechylone orbity dają głębię
+    const tilt1 = 1.15 + Math.sin(t * .2) * .08, tilt2 = 1.25 + Math.cos(t * .17) * .08;
+    tiltedRing(c, x, y, R * .68, t * .12 * spin + par.x, tilt1, 1.2, .5, [[0, 2.4], [2.7, 4.6], [4.9, 5.9]]);
+    tiltedRing(c, x, y, R * .64, -t * .09 * spin + 1.2 - par.y, tilt2, 1, .35);
+
+    // cienkie pierścienie wewnętrzne
+    ring(c, x, y, R * .58, 0, Math.PI * 2, 1, .3);
+    ring(c, x, y, R * .3, 0, Math.PI * 2, 1, .18);
+    c.save(); c.translate(x, y); c.rotate(-t * .2 * spin);
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * Math.PI * 2;
+      c.beginPath(); c.moveTo(Math.cos(a) * R * .31, Math.sin(a) * R * .31); c.lineTo(Math.cos(a) * R * .36, Math.sin(a) * R * .36);
+      c.lineWidth = 3; c.strokeStyle = rgba(col, .45); c.stroke();
+    }
+    c.restore();
+
+    // fala głosu
+    level += (target - level) * .2;
+    const N = 200;
+    for (const [alpha, sc, lw] of [[.3, 1.6, 1], [1, 1, 1.6]]) {
+      c.beginPath();
       for (let i = 0; i <= N; i++) {
-        const a = (i / N) * Math.PI * 2;
+        const a = i / N * Math.PI * 2;
         let amp;
         if (freq && uiState === 'listening') {
-          const k = Math.floor((Math.abs(Math.sin(a / 2)) * .5) * freq.length);
-          amp = (freq[k] / 255) * .22;
+          const kk = Math.floor(Math.abs(Math.sin(a / 2 + t * .3)) * .55 * freq.length);
+          amp = (freq[kk] / 255) * .3;
         } else {
           amp = 0;
           for (let j = 0; j < 3; j++) amp += Math.sin(a * (3 + j * 2) + t * (1.2 + j * .7) + phase[j]) / (j + 1);
-          amp *= .006 + level * .09;
+          amp *= .008 + level * .1;
         }
-        const r = R * (1 + amp * scale * (reduceMotion ? .4 : 1));
-        const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
-        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+        const r = R * .47 * (1 + amp * sc);
+        i ? c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r) : c.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
       }
-      ctx.strokeStyle = color; ctx.globalAlpha = alpha; ctx.lineWidth = lw * (devicePixelRatio || 1);
-      ctx.stroke();
+      c.lineWidth = lw; c.strokeStyle = rgba(col, alpha); c.stroke();
     }
-    // rdzeń: mały, czysty punkt światła
-    const core = w * (.018 + level * .02);
-    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, core * 6);
-    g.addColorStop(0, color); g.addColorStop(.18, color); g.addColorStop(1, 'transparent');
-    ctx.globalAlpha = .55 + level * .45; ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(cx, cy, core * 6, 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-    requestAnimationFrame(draw);
-  }
-  requestAnimationFrame(draw);
 
-  // ---------- rozmowa na ekranie ----------
+    // skanujący łuk, gdy myśli
+    if (think || flash > .01) {
+      const a = t * 4.2;
+      ring(c, x, y, R * .52, a, a + .9, 3, .9 * Math.max(think, flash));
+      ring(c, x, y, R * .52, a + Math.PI, a + Math.PI + .5, 2, .5 * Math.max(think, flash));
+    }
+
+    // rdzeń
+    const cr = R * (.045 + level * .04 + flash * .03);
+    const g = c.createRadialGradient(x, y, 0, x, y, cr * 3.2);
+    g.addColorStop(0, 'rgba(255,255,255,.95)'); g.addColorStop(.22, rgba(col, .75)); g.addColorStop(.55, rgba(col, .12)); g.addColorStop(1, rgba(col, 0));
+    c.fillStyle = g; c.beginPath(); c.arc(x, y, cr * 3.2, 0, Math.PI * 2); c.fill();
+
+    // linie prowadzące do paneli
+    c.lineWidth = 1;
+    for (const L of leaders) {
+      c.strokeStyle = rgba(col, .45);
+      c.beginPath(); c.moveTo(L.ax, L.ay); c.lineTo(L.ex, L.ey); c.lineTo(L.bx + (L.bx > L.ex ? -8 : 8), L.by); c.lineTo(L.bx, L.by); c.stroke();
+      c.fillStyle = rgba(col, .9); c.beginPath(); c.arc(L.ax, L.ay, 2.2, 0, Math.PI * 2); c.fill();
+    }
+  }
+
+  function frame(now) {
+    const t = (now - t0) / 1000;
+    par.x += (mouse.x - par.x) * .04; par.y += (mouse.y - par.y) * .04;
+    flash *= .93;
+    const want = COLORS[uiState] || COLORS.idle;
+    for (let i = 0; i < 3; i++) col[i] += (want[i] - col[i]) * .08;
+
+    drawScene(lctx, t);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (fx) {
+      // poświata: zmniejszona kopia sceny, rozmyta i dodana światłem
+      gctx.clearRect(0, 0, glowCv.width, glowCv.height);
+      gctx.filter = 'blur(3px)';
+      gctx.drawImage(layer, 0, 0, glowCv.width, glowCv.height);
+      gctx.filter = 'none';
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = .75 + level * .4;
+      ctx.drawImage(glowCv, 0, 0, cv.width, cv.height);
+      ctx.globalAlpha = .55;
+      ctx.drawImage(glowCv, -cv.width * .01, -cv.height * .01, cv.width * 1.02, cv.height * 1.02);
+      ctx.globalAlpha = 1;
+    }
+    ctx.drawImage(layer, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(frame);
+  }
+
+  // miernik w panelu „Głos”
+  const meter = $('meter');
+  for (let i = 0; i < 16; i++) meter.appendChild(document.createElement('i'));
+  setInterval(() => {
+    const bars = meter.children;
+    for (let i = 0; i < bars.length; i++) {
+      let v;
+      if (freq && uiState === 'listening') v = freq[Math.floor(i / bars.length * freq.length * .6)] / 255;
+      else v = level * (.4 + .6 * Math.abs(Math.sin(i * 1.7 + performance.now() / 160)));
+      bars[i].style.height = (15 + v * 85) + '%';
+      bars[i].style.opacity = (.25 + v * .75).toFixed(2);
+    }
+  }, 60);
+
+  // ================= ZEGAR =================
+  function tick() {
+    const n = new Date();
+    $('clock').textContent = n.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+    $('date').textContent = n.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+    $('clock2').textContent = $('clock').textContent; $('date2').textContent = $('date').textContent;
+  }
+  tick(); setInterval(tick, 10_000);
+
+  // ================= ROZMOWA =================
+  let sessCount = 0;
   function addTurn(kind, text) {
     $('log').querySelector('.empty')?.remove();
     const el = document.createElement('p');
@@ -320,7 +498,6 @@
     return el;
   }
 
-  // ---------- dźwięk potwierdzenia ----------
   let actx;
   function chime(freqHz = 880, dur = .12, vol = .035) {
     try {
@@ -334,14 +511,14 @@
     } catch { /* brak audio */ }
   }
 
-  // ---------- synteza mowy ----------
+  // ================= SYNTEZA MOWY =================
   const synth = window.speechSynthesis;
   let voices = [], voice = null, speakOn = store.get('speak', true);
   function rankVoice(v) {
     let s = 0;
     if (/^pl/i.test(v.lang)) s += 100;
     if (/natural|online|neural/i.test(v.name)) s += 20;
-    if (/marek|krzysztof|jacek/i.test(v.name)) s += 10; // męski głos, jak w filmie
+    if (/marek|krzysztof|jacek/i.test(v.name)) s += 10;
     return s;
   }
   function loadVoices() {
@@ -349,9 +526,7 @@
     if (!synth) { $('st-tts').textContent = 'niedostępny'; sel.innerHTML = '<option>Brak głosów</option>'; return; }
     voices = synth.getVoices().slice().sort((a, b) => rankVoice(b) - rankVoice(a));
     sel.innerHTML = '';
-    for (const v of voices) {
-      const o = document.createElement('option'); o.value = v.name; o.textContent = v.name; sel.appendChild(o);
-    }
+    for (const v of voices) { const o = document.createElement('option'); o.value = v.name; o.textContent = v.name; sel.appendChild(o); }
     if (!voices.length) sel.innerHTML = '<option>Brak głosów</option>';
     const saved = store.get('voice', null);
     voice = voices.find(v => v.name === saved) || voices[0] || null;
@@ -360,19 +535,14 @@
   }
   if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; } else loadVoices();
   $('sel-voice').onchange = e => { voice = voices.find(v => v.name === e.target.value) || voice; store.set('voice', voice?.name); loadVoices(); speak('Tak brzmi ten głos.'); };
-
-  function setSwitch(id, on) { $(id).setAttribute('aria-checked', String(on)); }
   setSwitch('sw-speak', speakOn);
   $('sw-speak').onclick = () => { speakOn = !speakOn; store.set('speak', speakOn); setSwitch('sw-speak', speakOn); if (!speakOn) stopSpeaking(); };
+  setSwitch('sw-fx', fx);
+  $('sw-fx').onclick = () => { fx = !fx; store.set('fx', fx); setSwitch('sw-fx', fx); layout(); };
 
   function cleanForSpeech(t) {
-    return t
-      .replace(/```[\s\S]*?```/g, ' ')
-      .replace(/`([^`]*)`/g, '$1')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/https?:\/\/\S+/g, 'link')
-      .replace(/[*_#>|~]/g, '')
-      .replace(/\s+/g, ' ').trim();
+    return t.replace(/```[\s\S]*?```/g, ' ').replace(/`([^`]*)`/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/https?:\/\/\S+/g, 'link').replace(/[*_#>|~]/g, '').replace(/\s+/g, ' ').trim();
   }
   let speakQueue = 0, speakPulse = null;
   function speak(text) {
@@ -397,7 +567,7 @@
   }
   function stopSpeaking() { if (synth) synth.cancel(); speakQueue = 0; clearInterval(speakPulse); target = 0; }
 
-  // ---------- rozpoznawanie mowy ----------
+  // ================= ROZPOZNAWANIE MOWY =================
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let rec = null, recActive = false, recWanted = false, recPaused = false, pttFinal = '', wakeMode = store.get('wake', false), awaitingCommand = false;
   const WAKE = /\b(d?[żz]?jar[vw]is[a-ząęółśżźćń]*|d[żz]ar[vw]is[a-ząęółśżźćń]*)\b[\s,.!?:]*/i;
@@ -414,15 +584,10 @@
         freq = new Uint8Array(analyser.frequencyBinCount);
       }
       cancelAnimationFrame(meterRaf);
-      const step = () => {
-        if (uiState !== 'listening') { target = 0; return; }
-        analyser.getByteFrequencyData(freq);
-        meterRaf = requestAnimationFrame(step);
-      };
+      const step = () => { if (uiState !== 'listening') return; analyser.getByteFrequencyData(freq); meterRaf = requestAnimationFrame(step); };
       step();
-    } catch { /* fala zostanie spokojna, rozpoznawanie i tak działa */ }
+    } catch { /* fala zostaje spokojna, rozpoznawanie działa dalej */ }
   }
-
   function makeRec() {
     const r = new SR();
     r.lang = 'pl-PL'; r.interimResults = true; r.continuous = wakeMode; r.maxAlternatives = 1;
@@ -464,19 +629,18 @@
       if (final.trim()) { awaitingCommand = false; setState('idle'); submit(final.trim()); }
       return;
     }
-    const m = WAKE.exec(heard);
-    if (!m) return;
+    if (!WAKE.test(heard)) return;
     $('live').textContent = heard;
     if (!final) return;
     const fm = WAKE.exec(final);
     const rest = fm ? final.slice(fm.index + fm[0].length).trim() : '';
-    chime(988);
+    chime(988); flash = 1;
     if (rest.length > 2) submit(rest);
     else { awaitingCommand = true; setState('listening'); startMeter(); }
   }
   function startListening() {
     if (!SR || busy) return;
-    stopSpeaking();
+    stopSpeaking(); flash = 1;
     if (wakeMode) { awaitingCommand = true; setState('listening'); chime(988); startMeter(); return; }
     if (recActive) return;
     rec = makeRec(); pttFinal = '';
@@ -497,19 +661,18 @@
     try { rec && rec.abort(); } catch {}
     wakeMode ? startWake() : stopWake();
   };
-
   const toggleTalk = () => (uiState === 'listening' && !wakeMode) ? stopListening() : startListening();
   $('reactor').onclick = toggleTalk;
   $('btn-mic').onclick = toggleTalk;
   let spaceDown = false;
   const typing = () => ['INPUT', 'SELECT'].includes(document.activeElement?.tagName);
-  window.addEventListener('keydown', e => {
+  addEventListener('keydown', e => {
     if (e.code === 'Space' && !spaceDown && !typing() && !document.body.classList.contains('settings')) { e.preventDefault(); spaceDown = true; startListening(); }
     if (e.code === 'Escape') { document.body.classList.contains('settings') ? closeSettings() : cancelAll(); }
   });
-  window.addEventListener('keyup', e => { if (e.code === 'Space' && spaceDown) { e.preventDefault(); spaceDown = false; stopListening(); } });
+  addEventListener('keyup', e => { if (e.code === 'Space' && spaceDown) { e.preventDefault(); spaceDown = false; stopListening(); } });
 
-  // ---------- wysyłanie poleceń ----------
+  // ================= WYSYŁANIE =================
   let busy = false, currentAbort = null;
   async function submit(text) {
     if (busy) return;
@@ -521,6 +684,7 @@
     addTurn('me', text);
     $('live').textContent = '';
     setState('thinking');
+    const started = performance.now();
     const out = addTurn('ai', '');
     let full = '', spoken = 0;
     const flush = force => {
@@ -533,12 +697,9 @@
     };
     currentAbort = new AbortController();
     try {
-      const res = await fetch('/api/ask', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }), signal: currentAbort.signal,
-      });
+      const res = await fetch('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), signal: currentAbort.signal });
       if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || `Błąd serwera (${res.status}).`); }
-      const reader = res.body.getReader(), dec = new TextDecoder(); let buf = '';
+      const reader = res.body.getReader(), dec = new TextDecoder(); let buf = '', first = true;
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -548,17 +709,21 @@
           const line = buf.slice(0, nl); buf = buf.slice(nl + 1);
           if (!line.trim()) continue;
           const ev = JSON.parse(line);
-          if (ev.type === 'text') { full += ev.data; out.textContent = full; $('log').scrollTop = $('log').scrollHeight; flush(false); }
+          if (ev.type === 'text') {
+            if (first) { first = false; $('sess-time').textContent = `Ostatnia odpowiedź: ${((performance.now() - started) / 1000).toFixed(1).replace('.', ',')} s`; }
+            full += ev.data; out.textContent = full; $('log').scrollTop = $('log').scrollHeight; flush(false);
+          }
           else if (ev.type === 'tool') { const s = document.createElement('span'); s.className = 'tool'; s.textContent = 'Używa: ' + ev.data; out.appendChild(s); }
           else if (ev.type === 'error') throw new Error(ev.data);
         }
       }
       flush(true);
       if (!full.trim()) out.textContent = 'Brak odpowiedzi.';
+      sessCount++;
+      $('sess-count').textContent = `${sessCount} ${sessCount === 1 ? 'polecenie' : (sessCount % 10 >= 2 && sessCount % 10 <= 4 && (sessCount % 100 < 12 || sessCount % 100 > 14)) ? 'polecenia' : 'poleceń'}`;
     } catch (e) {
       if (e.name !== 'AbortError') {
-        out.remove();
-        addTurn('fault', e.message);
+        out.remove(); addTurn('fault', e.message);
         setState('error'); chime(330, .3);
         setTimeout(() => uiState === 'error' && setState(wakeMode ? 'wake' : 'idle'), 2500);
       } else if (!full) out.remove();
@@ -580,25 +745,25 @@
     if (e.key === 'Enter' && e.target.value.trim()) { const t = e.target.value.trim(); e.target.value = ''; submit(t); }
   });
 
-  // ---------- ustawienia ----------
+  // ================= USTAWIENIA =================
   function openSettings() { document.body.classList.add('settings'); $('sheet').setAttribute('aria-hidden', 'false'); $('btn-close').focus(); }
   function closeSettings() { document.body.classList.remove('settings'); $('sheet').setAttribute('aria-hidden', 'true'); $('btn-settings').focus(); }
   $('btn-settings').onclick = openSettings;
   $('btn-close').onclick = closeSettings;
   $('scrim').onclick = closeSettings;
 
-  // ---------- połączenie z mostem ----------
+  // ================= MOST =================
   let status = { mode: 'disconnected' };
   async function poll() {
     try { status = await (await fetch('/api/status', { cache: 'no-store' })).json(); }
     catch { status = { mode: 'disconnected', message: 'Most nie działa. Uruchom start.bat.' }; }
-    const link = $('link');
-    link.className = 'link ' + ({ connected: 'ok', demo: 'wait', pairing: 'wait' }[status.mode] || 'off');
     $('link-text').textContent =
-      status.mode === 'connected' ? (status.model ? status.model.label : 'Cindy bez modelu')
+      status.mode === 'connected' ? (status.model ? status.model.label : 'Brak modelu')
       : status.mode === 'demo' ? 'Tryb demo'
-      : status.mode === 'pairing' ? 'Czekam na zgodę w Cindy'
-      : 'Brak połączenia z Cindy';
+      : status.mode === 'pairing' ? 'Czekam na zgodę'
+      : 'Brak połączenia';
+    $('link2').textContent = $('link-text').textContent;
+    $('link-sub').textContent = status.mode === 'connected' && status.model ? `Cindy, ${status.model.provider}` : 'Cindy';
     $('conn-msg').textContent = status.message || '';
     $('st-policy').textContent = status.toolPolicy === 'native' ? 'pełny' : 'brak (tylko rozmowa)';
     $('st-cwd').textContent = status.cwd || '—';
@@ -618,12 +783,16 @@
   $('btn-connect').onclick = async () => { await fetch('/api/connect', { method: 'POST' }); poll(); };
   $('btn-demo').onclick = async () => { await fetch('/api/demo', { method: 'POST' }); await poll(); closeSettings(); };
 
+  // ================= START =================
+  layout();
+  document.fonts?.ready.then(layout);
+  requestAnimationFrame(frame);
   poll(); setInterval(poll, 1500);
   setState(wakeMode && SR ? 'wake' : 'idle');
   if (wakeMode && SR) startWake();
   const empty = document.createElement('p'); empty.className = 'empty';
   empty.textContent = SR
-    ? 'Dotknij reaktora albo przytrzymaj spację i powiedz, czego potrzebujesz.'
+    ? 'Dotknij rdzenia albo przytrzymaj spację i powiedz, czego potrzebujesz.'
     : 'Ta przeglądarka nie rozpoznaje mowy. Otwórz Jarvisa w Edge albo Chrome lub napisz polecenie poniżej.';
   $('log').appendChild(empty);
 })();
