@@ -33,12 +33,25 @@ Tak jest bezpieczniej, bo token nie jest nigdzie zapisywany.
 
 | Akcja | Jak |
 |---|---|
-| Mów (jedno polecenie) | dotknij reaktora / przycisk mikrofonu / przytrzymaj spację |
-| Tryb „Jarvis, …” | przycisk **Słowo „Jarvis”**: HUD słucha cały czas i reaguje na słowo „Jarvis” |
-| Przerwij mowę i odpowiedź | **Stop** albo `Esc` |
+| Mów (jedno polecenie) | dotknij rdzenia / przycisk **Mów** / przytrzymaj spację |
+| Tryb „Jarvis, …” | w ustawieniach **Reaguj na słowo „Jarvis”**: HUD słucha cały czas |
+| Przerwij mowę i odpowiedź | **Przerwij** albo `Esc` |
 | Wpisz zamiast mówić | pole na dole + Enter |
 
-Najlepiej brzmi głos **„Microsoft Marek Online (Natural)”** w Edge. Wybierzesz go w panelu Konfiguracja.
+Najlepiej brzmi głos **„Microsoft Marek Online (Natural)”** w Edge. Wybierzesz go w ustawieniach (ikona w prawym górnym rogu).
+
+## Tło: obrazy i wideo
+
+HUD rysuje rdzeń, teren, smugi światła i animację startu w kodzie, bez żadnych opłat.
+Możesz dodać własne tło: wrzuć pliki do folderu `media/` (opis w [`media/README.md`](media/README.md)):
+
+- `tlo.mp4`: zapętlone wideo (darmowe z Pixabay, Mixkit, Pexels albo własne z AI)
+- `tlo.jpg`: nieruchome tło z efektem głębi
+- `hologramy.jpg`: warstwa hologramów na czarnym tle
+
+Własne wideo AI za darmo na Twoim komputerze: [`docs/wideo-ai-lokalnie.md`](docs/wideo-ai-lokalnie.md).
+
+Jeśli radio przycina, wyłącz w ustawieniach **Pełne efekty** albo **Tło z folderu media**.
 
 ## Ustawienia (`config.json`)
 

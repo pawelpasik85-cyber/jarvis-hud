@@ -305,6 +305,49 @@ function sendJson(res, code, body) {
   res.end(JSON.stringify(body));
 }
 
+// ---------- pliki tła z folderu media/ ----------
+const MEDIA_DIR = path.join(HERE, 'media');
+const MEDIA_TYPES = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.mp4': 'video/mp4', '.webm': 'video/webm' };
+// Nazwy, których szuka HUD (pierwszy istniejący plik z każdej grupy).
+const MEDIA_SLOTS = {
+  video: ['tlo.mp4', 'tlo.webm'],
+  backdrop: ['tlo.jpg', 'tlo.jpeg', 'tlo.png', 'tlo.webp'],
+  holo: ['hologramy.jpg', 'hologramy.jpeg', 'hologramy.png', 'hologramy.webp'],
+};
+
+async function mediaList() {
+  const out = {};
+  for (const [slot, names] of Object.entries(MEDIA_SLOTS)) {
+    for (const n of names) {
+      try { const st = await fs.stat(path.join(MEDIA_DIR, n)); if (st.isFile()) { out[slot] = `/media/${n}?v=${st.mtimeMs | 0}`; break; } } catch { /* brak pliku */ }
+    }
+  }
+  return out;
+}
+
+async function serveMedia(req, res, name) {
+  // Tylko płaska nazwa pliku z dozwolonym rozszerzeniem — bez wychodzenia poza folder.
+  if (!/^[\w.-]+$/.test(name) || name.startsWith('.')) { res.writeHead(404); return res.end(); }
+  const type = MEDIA_TYPES[path.extname(name).toLowerCase()];
+  if (!type) { res.writeHead(404); return res.end(); }
+  const file = path.join(MEDIA_DIR, name);
+  let st;
+  try { st = await fs.stat(file); } catch { res.writeHead(404); return res.end(); }
+  const { createReadStream } = await import('node:fs');
+  const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+  if (range && (range[1] || range[2])) {
+    // Zakresy są potrzebne przeglądarce do płynnego zapętlania wideo.
+    let start = range[1] ? Number(range[1]) : st.size - Number(range[2]);
+    let end = range[1] && range[2] ? Number(range[2]) : st.size - 1;
+    start = Math.max(0, start); end = Math.min(end, st.size - 1);
+    if (start > end) { res.writeHead(416, { 'Content-Range': `bytes */${st.size}` }); return res.end(); }
+    res.writeHead(206, { 'Content-Type': type, 'Content-Length': end - start + 1, 'Content-Range': `bytes ${start}-${end}/${st.size}`, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache' });
+    return createReadStream(file, { start, end }).pipe(res);
+  }
+  res.writeHead(200, { 'Content-Type': type, 'Content-Length': st.size, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-cache' });
+  createReadStream(file).pipe(res);
+}
+
 const server = http.createServer(async (req, res) => {
   if (!sameOrigin(req)) { res.writeHead(403); return res.end('Forbidden'); }
   const url = new URL(req.url, `http://${HOST}:${PORT}`);
@@ -315,6 +358,8 @@ const server = http.createServer(async (req, res) => {
       return res.end(html);
     }
     if (req.method === 'GET' && url.pathname === '/api/status') return sendJson(res, 200, publicStatus());
+    if (req.method === 'GET' && url.pathname === '/api/media') return sendJson(res, 200, await mediaList());
+    if (req.method === 'GET' && url.pathname.startsWith('/media/')) return serveMedia(req, res, decodeURIComponent(url.pathname.slice(7)));
 
     if (req.method === 'POST' && url.pathname === '/api/connect') {
       connect(); // w tle — HUD odpytuje /api/status
