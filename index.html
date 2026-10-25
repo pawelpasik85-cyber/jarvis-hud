@@ -694,6 +694,7 @@
 
   // ================= ROZPOZNAWANIE MOWY =================
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let netErrors = 0, netShown = false;
   let rec = null, recActive = false, recWanted = false, recPaused = false, pttFinal = '', wakeMode = store.get('wake', false), awaitingCommand = false;
   const WAKE = /\b(d?[żz]?jar[vw]is[a-ząęółśżźćń]*|d[żz]ar[vw]is[a-ząęółśżźćń]*)\b[\s,.!?:]*/i;
   $('st-mic').textContent = SR ? 'gotowe' : 'niedostępne w tej przeglądarce';
@@ -718,6 +719,7 @@
     r.lang = 'pl-PL'; r.interimResults = true; r.continuous = wakeMode; r.maxAlternatives = 1;
     r.onstart = () => { recActive = true; };
     r.onresult = ev => {
+      netErrors = 0;
       let interim = '', final = '';
       for (let i = ev.resultIndex; i < ev.results.length; i++) {
         const tr = ev.results[i][0].transcript;
@@ -732,7 +734,16 @@
         recWanted = false; wakeMode = false; store.set('wake', false); setSwitch('sw-wake', false);
         addTurn('fault', 'Przeglądarka nie ma dostępu do mikrofonu. Kliknij ikonę kłódki przy adresie i zezwól na mikrofon.');
       } else if (ev.error === 'network') {
-        addTurn('fault', 'Rozpoznawanie mowy potrzebuje internetu. Sprawdź połączenie albo napisz polecenie.');
+        netErrors++;
+        // tryb słowa-klucza restartuje się w kółko — nie zasypujemy ekranu tym samym błędem
+        if (wakeMode && netErrors >= 2) {
+          recWanted = false; wakeMode = false; store.set('wake', false); setSwitch('sw-wake', false);
+          setState('idle');
+          addTurn('fault', 'Rozpoznawanie mowy w tej przeglądarce nie działa (błąd usługi mowy). Wyłączyłem nasłuch na „Jarvis”. Spróbuj przycisku Mów albo otwórz Jarvisa w Google Chrome.');
+        } else if (!netShown) {
+          netShown = true;
+          addTurn('fault', 'Usługa rozpoznawania mowy nie odpowiada. Sprawdź internet albo otwórz Jarvisa w Google Chrome.');
+        }
       }
     };
     r.onend = () => {
